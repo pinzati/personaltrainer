@@ -6,6 +6,7 @@ import "ag-grid-community/styles/ag-theme-material.css"; // Optional Theme appli
 import { fetchCustomer } from "../customerapi";
 import dayjs from "dayjs";
 import { Button } from "@mui/material";
+import { deleteTraining } from "../trainingapi";
 
 function Traininglist() {
 
@@ -23,7 +24,7 @@ function Traininglist() {
         { field: 'customer.lastname', headerName: 'Last Name', filter: true },
         {
             cellRenderer: params =>
-                <Button size="small" color="error" onClick={() => deleteTraining(params.data.id)}>
+                <Button size="small" color="error" onClick={() => handleDeleteTraining(params.data.id)}>
                     Delete
                 </Button>,
             width: 120
@@ -36,35 +37,33 @@ function Traininglist() {
 
     const handleFetch = () => {
         fetchTrainings()
-        .then(data => setTrainings(data))
-        .catch(err => console.error(err))
-    }
-
-    const deleteTraining = (id) => {
-        if (window.confirm("Are you sure you want to delete this training?")) {
-            fetch(import.meta.env.VITE_API_URL_TRAININGS + `/${id}`, { method: 'DELETE' })
-            .then(response => {
-                if (!response.ok)
-                    throw new Error("Error in fetch: " + response.statusText);
-
-                return response.json();
-            })
-            .then(() => handleFetch())
+            .then(data => setTrainings(data))
             .catch(err => console.error(err))
-        }
     }
+
+    const handleDeleteTraining = (id) => {
+        if (window.confirm("Are you sure you want to delete this training?")) {
+            deleteTraining(id)
+                .then(() => {
+                    handleFetch();
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
+    };
 
     return (
         <>
-        <div className="ag-theme-material" style={{ height: 600, width: 1300 }}>
-            <AgGridReact 
-            rowData={trainings}
-            columnDefs={colDef}
-            pagination={true}
-            paginationAutoPageSize={true}
-            suppressCellFocus={true}
-            />
-        </div>
+            <div className="ag-theme-material" style={{ height: 600, width: 1300 }}>
+                <AgGridReact
+                    rowData={trainings}
+                    columnDefs={colDef}
+                    pagination={true}
+                    paginationAutoPageSize={true}
+                    suppressCellFocus={true}
+                />
+            </div>
         </>
     );
 

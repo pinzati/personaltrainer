@@ -8,6 +8,10 @@ import "ag-grid-community/styles/ag-theme-material.css"; // Optional Theme appli
 import { Button } from "@mui/material";
 import AddTraining from "./AddTraining";
 import { CSVLink } from "react-csv";
+import { addCustomer } from "../customerapi";
+import { deleteCustomer } from "../customerapi";
+import { updateCustomer } from "../customerapi";
+import { addTraining } from "../trainingapi";
 
 
 function Customerlist() {
@@ -24,7 +28,7 @@ function Customerlist() {
         { field: 'phone', filter: true, width: 130 },
         {
             cellRenderer: params =>
-                <AddTraining customer={params.data} addTraining={(trainingData) => addTraining(trainingData, params.data._links.self.href)} />
+                <AddTraining customer={params.data} addTraining={(trainingData) => handleAddTraining(trainingData, params.data._links.self.href)} />
         },
         {
             cellRenderer: params => 
@@ -33,7 +37,7 @@ function Customerlist() {
         },
         {
             cellRenderer: params =>
-                <Button size="small" color="error" onClick={() => deleteCustomer(params.data._links.customer.href)}>
+                <Button size="small" color="error" onClick={() => handleDeleteCustomer(params.data._links.customer.href)}>
                     Delete
                 </Button>,
             width: 120
@@ -53,66 +57,46 @@ function Customerlist() {
             .catch(err => console.error(err))
     }
 
-    const addCustomer = (newCustomer) => {
-        fetch(import.meta.env.VITE_API_URL_CUSTOMERS, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(newCustomer)
-        })
-            .then(response => {
-                if (!response.ok)
-                    throw new Error("Error when adding customer: " + response.statusText);
-
-                return response.json();
+    const handleAddCustomer = (newCustomer) => {
+        addCustomer(newCustomer)
+            .then(() => {
+                handleFetch();
             })
-            .then(() => handleFetch())
-            .catch(err => console.error(err))
+            .catch(err => {
+                console.error(err);
+            });
+    };
+
+    const handleUpdateCustomer = (url, updatedCustomer) => {
+        updateCustomer(url, updatedCustomer)
+            .then(() => {
+                handleFetch();
+            })
+            .catch(err => {
+                console.error(err);
+            });
     }
 
-    const updateCustomer = (url, updatedCustomer) => {
-        fetch(url, {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(updatedCustomer)
-        })
-            .then(response => {
-                if (!response.ok)
-                    throw new Error("Error when updating customer: " + response.statusText)
-
-                return response.json();
-            })
-            .then(() => handleFetch())
-            .catch(err => console.error(err))
-    }
-
-    const deleteCustomer = (url) => {
+    const handleDeleteCustomer = (url) => {
         if (window.confirm("Are you sure you want to delete this customer?")) {
-            fetch(url, { method: 'DELETE' })
-                .then(response => {
-                    if (!response.ok)
-                        throw new Error("Error in fetch: " + response.statusText);
-
-                    return response.json();
+            deleteCustomer(url)
+                .then(() => {
+                    handleFetch();
                 })
-                .then(() => handleFetch())
-                .catch(err => console.error(err))
+                .catch(err => {
+                    console.error(err);
+                });
         }
     }
 
-    const addTraining = (trainingData, customerUrl) => {
-        fetch(import.meta.env.VITE_API_URL_TRAININGS, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ ...trainingData, customer: customerUrl })
-        })
-            .then(response => {
-                if (!response.ok)
-                    throw new Error("Error when adding training: " + response.statusText)
-
-                return response.json();
+    const handleAddTraining = (trainingData, customerUrl) => {
+        addTraining(trainingData, customerUrl)
+            .then(() => {
+                handleFetch();
             })
-            .then(() => handleFetch())
-            .catch(err => console.error(err))
+            .catch(err => {
+                console.error(err);
+            });
     }
 
     const exportCustomerData = () => {
